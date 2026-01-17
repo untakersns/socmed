@@ -5,8 +5,10 @@ using socmed.Services;
 
 namespace socmed.Mediator.Handler
 {
-    public record LoginCommand(string Email, string Password) : IRequest<string?>;
-    public class LoginHandler:IRequestHandler<LoginCommand,string?>
+    public record LoginResponse(string AccessToken, string RefreshToken);
+    public record LoginCommand(string Email, string Password) : IRequest<LoginResponse?>;
+
+    public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse?>
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IJwtProvider _jwtProvider;
@@ -16,8 +18,7 @@ namespace socmed.Mediator.Handler
             _userManager = userManager;
             _jwtProvider = jwtProvider;
         }
-
-        public async Task<string?> Handle(LoginCommand request, CancellationToken cancellationToken)
+        public async Task<LoginResponse?> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null) return null;
@@ -25,8 +26,16 @@ namespace socmed.Mediator.Handler
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
             if (!isPasswordValid) return null;
 
-            return _jwtProvider.GenerateToken(user);
+            var accessToken = _jwtProvider.GenerateToken(user);
+
+            var refreshToken = Guid.NewGuid().ToString();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+
+            await _userManager.UpdateAsync(user);
+
+            return new LoginResponse(accessToken, refreshToken);
         }
     }
-    
 }
