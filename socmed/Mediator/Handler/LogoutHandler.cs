@@ -6,6 +6,7 @@ using System.Security.Claims;
 namespace socmed.Mediator.Handler
 {
     public record LogoutCommand() : IRequest<bool>;
+
     public class LogoutHandler : IRequestHandler<LogoutCommand, bool>
     {
         private readonly UserManager<ApplicationUser> _userManager;

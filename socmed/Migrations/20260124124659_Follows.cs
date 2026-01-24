@@ -5,7 +5,7 @@
 namespace socmed.Migrations
 {
     /// <inheritdoc />
-    public partial class RequestsFinal : Migration
+    public partial class Follows : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace socmed.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateUserAndAddFollowers : Migration
+    public partial class Restore : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,7 +20,7 @@ namespace socmed.Migrations
             migrationBuilder.AddColumn<DateTime>(
                 name: "BirthDate",
                 table: "AspNetUsers",
-                type: "timestamp with time zone",
+                type: "timestamp without time zone",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
@@ -32,7 +32,7 @@ namespace socmed.Migrations
             migrationBuilder.AddColumn<DateTime>(
                 name: "RefreshTokenExpiryTime",
                 table: "AspNetUsers",
-                type: "timestamp with time zone",
+                type: "timestamp without time zone",
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
@@ -40,16 +40,15 @@ namespace socmed.Migrations
                 name: "UserFollowers",
                 columns: table => new
                 {
-                    ObserverId = table.Column<string>(type: "text", nullable: false),
-                    TargetId = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    FollowerId = table.Column<string>(type: "text", nullable: false),
+                    TargetId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserFollowers", x => new { x.ObserverId, x.TargetId });
+                    table.PrimaryKey("PK_UserFollowers", x => new { x.FollowerId, x.TargetId });
                     table.ForeignKey(
-                        name: "FK_UserFollowers_AspNetUsers_ObserverId",
-                        column: x => x.ObserverId,
+                        name: "FK_UserFollowers_AspNetUsers_FollowerId",
+                        column: x => x.FollowerId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);

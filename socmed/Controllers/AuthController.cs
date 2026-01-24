@@ -14,7 +14,8 @@ namespace socmed.Controllers
         private readonly IMediator _mediator;
         public AuthController(IMediator mediator) => _mediator = mediator;
 
-        [HttpPost("register")] public async Task<IActionResult> Register([FromBody] RegisterCommand cmd) => Ok(await _mediator.Send(cmd));
+        [HttpPost("register")] public async Task<IActionResult> Register([FromBody] RegisterCommand cmd) 
+            => Ok(await _mediator.Send(cmd));
         
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginCommand command)

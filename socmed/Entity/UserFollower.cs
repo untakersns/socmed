@@ -2,12 +2,10 @@
 {
     public class UserFollower
     {
-        public required string ObserverId { get; set; } // Тот, кто подписывается
-        public required ApplicationUser Observer { get; set; }
+        public string FollowerId { get; set; } = null!;
+        public ApplicationUser Follower { get; set; } = null!;
 
-        public required string TargetId { get; set; } // Тот, на кого подписываются
-        public required ApplicationUser Target { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string TargetId { get; set; } = null!;
+        public ApplicationUser Target { get; set; } = null!;
     }
 }

@@ -12,8 +12,8 @@ using socmed.Data;
 namespace socmed.Migrations
 {
     [DbContext(typeof(SMDbContext))]
-    [Migration("20260116212729_RequestsFinal")]
-    partial class RequestsFinal
+    [Migration("20260124124659_Follows")]
+    partial class Follows
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -169,7 +169,7 @@ namespace socmed.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("BirthDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -209,7 +209,7 @@ namespace socmed.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("RefreshTokenExpiryTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
@@ -235,16 +235,13 @@ namespace socmed.Migrations
 
             modelBuilder.Entity("socmed.Entity.UserFollower", b =>
                 {
-                    b.Property<string>("ObserverId")
+                    b.Property<string>("FollowerId")
                         .HasColumnType("text");
 
                     b.Property<string>("TargetId")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("ObserverId", "TargetId");
+                    b.HasKey("FollowerId", "TargetId");
 
                     b.HasIndex("TargetId");
 
@@ -304,9 +301,9 @@ namespace socmed.Migrations
 
             modelBuilder.Entity("socmed.Entity.UserFollower", b =>
                 {
-                    b.HasOne("socmed.Entity.ApplicationUser", "Observer")
+                    b.HasOne("socmed.Entity.ApplicationUser", "Follower")
                         .WithMany("Following")
-                        .HasForeignKey("ObserverId")
+                        .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -316,7 +313,7 @@ namespace socmed.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Observer");
+                    b.Navigation("Follower");
 
                     b.Navigation("Target");
                 });

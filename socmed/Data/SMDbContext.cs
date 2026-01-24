@@ -15,12 +15,12 @@ namespace socmed.Data
             base.OnModelCreating(builder);
 
             builder.Entity<UserFollower>()
-                .HasKey(k => new { k.ObserverId, k.TargetId });
+                .HasKey(k => new { k.FollowerId, k.TargetId });
 
             builder.Entity<UserFollower>()
-                .HasOne(u => u.Observer)
+                .HasOne(u => u.Follower)
                 .WithMany(u => u.Following)
-                .HasForeignKey(u => u.ObserverId)
+                .HasForeignKey(u => u.FollowerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<UserFollower>()
