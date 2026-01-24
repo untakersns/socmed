@@ -10,6 +10,7 @@ namespace socmed.Mediator.Query
     public class GetUserProfileHandler : IRequestHandler<GetUserByIdQuery, UserProfileResponse?>
     {
         private readonly SMDbContext _context;
+
         public GetUserProfileHandler(SMDbContext context) => _context = context;
 
         public async Task<UserProfileResponse?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)

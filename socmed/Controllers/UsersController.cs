@@ -12,15 +12,14 @@ namespace socmed.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IMediator _mediator;
+
         public UsersController(IMediator mediator) => _mediator = mediator;
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfile(string id) => Ok(await _mediator.Send(new GetUserByIdQuery(id)));
 
         [HttpGet("{id}/followers")]
-
         [HttpGet("{id}/following")]
-
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProfile(string id, [FromBody] UpdateUserProfileRequest request)
@@ -36,6 +35,7 @@ namespace socmed.Controllers
             var result = await _mediator.Send(command);
             return result ? NoContent() : BadRequest();
         }
+
         [Authorize]
         [HttpPost("/follow/{targetId}")]
         public async Task<IActionResult> Follow(string targetId)
@@ -43,6 +43,7 @@ namespace socmed.Controllers
             var result = await _mediator.Send(new FollowUserCommand(targetId));
             return result ? Ok() : BadRequest("Не удалось подписаться");
         }
+
         [Authorize]
         [HttpDelete("/unfollow/{targetId}")]
         public async Task<IActionResult> Unfollow(string targetId)
@@ -56,6 +57,7 @@ namespace socmed.Controllers
         {
             return Ok(await _mediator.Send(new GetFollowersQuery(id)));
         }
+
         [HttpGet("/following/{id}")]
         public async Task<ActionResult<List<UserDto>>> GetFollowing(string id)
         {

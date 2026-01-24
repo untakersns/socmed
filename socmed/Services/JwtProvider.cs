@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.Tokens;
 using socmed.Entity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,11 +9,14 @@ namespace socmed.Services
     public interface IJwtProvider
     {
         string GenerateToken(ApplicationUser user);
+
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
     }
+
     public class JwtProvider : IJwtProvider
     {
         private readonly IConfiguration _configuration;
+
         public JwtProvider(IConfiguration configuration) => _configuration = configuration;
 
         public string GenerateToken(ApplicationUser user)
@@ -38,6 +40,7 @@ namespace socmed.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
         public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters

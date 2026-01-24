@@ -18,6 +18,7 @@ namespace socmed.Mediator.Handler
             _userManager = userManager;
             _jwtProvider = jwtProvider;
         }
+
         public async Task<LoginResponse?> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);

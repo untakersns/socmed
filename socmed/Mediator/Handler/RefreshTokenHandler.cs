@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using socmed.Entity;
 using socmed.Services;
 using System.Security.Claims;
-using System.Security.Cryptography;
 
 namespace socmed.Mediator.Handler
 {
@@ -13,11 +12,13 @@ namespace socmed.Mediator.Handler
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IJwtProvider _jwtProvider;
+
         public RefreshTokenHandler(UserManager<ApplicationUser> userManager, IJwtProvider jwtProvider)
         {
             _userManager = userManager;
             _jwtProvider = jwtProvider;
         }
+
         public async Task<LoginResponse?> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
             // 1. Извлекаем данные из старого (просроченного) токена

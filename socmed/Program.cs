@@ -6,15 +6,17 @@ using socmed.Data;
 using socmed.Entity;
 using socmed.Services;
 using System.Text;
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddDbContext<SMDbContext>(options => {
+builder.Services.AddDbContext<SMDbContext>(options =>
+{
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=localhost;Database=SocMedAPI;Username=postgres;Password=root"; 
+        ?? "Host=localhost;Database=SocMedAPI;Username=postgres;Password=root";
     options.UseNpgsql(connectionString);
 });
 
@@ -23,13 +25,15 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
-builder.Services.AddScoped<IJwtProvider,JwtProvider>();
+builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddAuthentication(options => {
+builder.Services.AddAuthentication(options =>
+{
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options => {
+.AddJwtBearer(options =>
+{
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,

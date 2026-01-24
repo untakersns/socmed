@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using socmed.Entity;
 
 namespace socmed.Data
 {
-    public class SMDbContext:IdentityDbContext<ApplicationUser>
+    public class SMDbContext : IdentityDbContext<ApplicationUser>
     {
-        public SMDbContext(DbContextOptions<SMDbContext> options) : base(options)  { }
+        public SMDbContext(DbContextOptions<SMDbContext> options) : base(options)
+        {
+        }
+
         public DbSet<UserFollower> UserFollowers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)

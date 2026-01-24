@@ -4,10 +4,12 @@ using socmed.Entity;
 
 namespace socmed.Mediator.Handler
 {
-    public record RegisterCommand(string Email, string Password):IRequest<bool>;
+    public record RegisterCommand(string Email, string Password) : IRequest<bool>;
+
     public class RegisterHandler : IRequestHandler<RegisterCommand, bool>
     {
         private readonly UserManager<ApplicationUser> _userManager;
+
         public RegisterHandler(UserManager<ApplicationUser> userManager) => _userManager = userManager;
 
         public async Task<bool> Handle(RegisterCommand request, CancellationToken cancellationToken)
