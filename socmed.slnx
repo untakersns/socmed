@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="socmed/socmed.csproj" />
+  <Project Path="socmed_front/socmed_front.csproj" Id="13d5592e-96b7-44ef-adff-04771967bdda" />
 </Solution>
