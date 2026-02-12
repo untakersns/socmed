@@ -1,0 +1,177 @@
+﻿@page "/users"
+@using Microsoft.AspNetCore.Components.Authorization
+@using socmed_front.Models
+@using socmed_front.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject UserService UserService
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ProtectedLocalStorage LocalStorage
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold text-primary">Исследуйте сообщество</h2>
+        <span class="badge bg-secondary">@(users?.Count ?? 0) пользователей</span>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+        </div>
+    }
+    else if (users == null || users.Count == 0)
+    {
+        <div class="alert alert-info text-center">
+            <p>Нет пользователей для отображения</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+            @foreach (var user in users)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 profile-card">
+                        <div class="card-body d-flex flex-column">
+                            <div class="text-center mb-3">
+                                <div class="avatar-placeholder bg-primary text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; font-size: 24px; font-weight: bold;">
+                                    @user.UserName[0].ToString().ToUpper()
+                                </div>
+                            </div>
+
+                            <h5 class="card-title fw-bold text-center mb-1">@user.UserName</h5>
+                            <p class="card-text text-muted small text-center mb-3">
+                                @(string.IsNullOrEmpty(user.Bio) ? "Био не заполнено" : user.Bio)
+                            </p>
+
+                            <div class="mt-auto">
+                                <div class="d-grid gap-2">
+                                    <a href="/user/@user.Id" class="btn btn-outline-primary btn-sm">
+                                        Профиль
+                                    </a>
+                                    @if (isAuthenticated && currentUserId != user.Id)
+                                    {
+                                        @if (GetFollowingStatus(user.Id))
+                                        {
+                                            <button class="btn btn-danger btn-sm" 
+                                                    @onclick="() => ToggleFollow(user.Id)" 
+                                                    disabled="@togglingUserId == user.Id">
+                                                @if (togglingUserId == user.Id)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                }
+                                                Отписаться
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-primary btn-sm" 
+                                                    @onclick="() => ToggleFollow(user.Id)" 
+                                                    disabled="@togglingUserId == user.Id">
+                                                @if (togglingUserId == user.Id)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                }
+                                                Подписаться
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<UserDto>? users;
+    private Dictionary<string, bool> userFollowingStatus = new();
+    private string? currentUserId;
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private string? togglingUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                        ?? authState.User.FindFirst("sub")?.Value;
+
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        userFollowingStatus.Clear();
+
+        try
+        {
+            users = await UserService.GetAllUsers();
+
+            // Если пользователь аутентифицирован, загружаем информацию о подписках
+            if (isAuthenticated && !string.IsNullOrEmpty(currentUserId))
+            {
+                var following = await UserService.GetFollowing(currentUserId);
+                foreach (var user in following)
+                {
+                    userFollowingStatus[user.Id] = true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            users = new List<UserDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool GetFollowingStatus(string userId)
+    {
+        return userFollowingStatus.ContainsKey(userId) && userFollowingStatus[userId];
+    }
+
+    private async Task ToggleFollow(string userId)
+    {
+        var tokenResult = await LocalStorage.GetAsync<string>("accessToken");
+        if (!tokenResult.Success) return;
+
+        togglingUserId = userId;
+
+        try
+        {
+            bool success;
+            if (GetFollowingStatus(userId))
+            {
+                success = await UserService.UnfollowUser(userId);
+                if (success)
+                {
+                    userFollowingStatus[userId] = false;
+                }
+            }
+            else
+            {
+                success = await UserService.FollowUser(userId);
+                if (success)
+                {
+                    userFollowingStatus[userId] = true;
+                }
+            }
+        }
+        finally
+        {
+            togglingUserId = null;
+        }
+    }
+}

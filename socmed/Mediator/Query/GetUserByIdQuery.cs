@@ -5,7 +5,7 @@ using socmed.Data;
 namespace socmed.Mediator.Query
 {
     public record GetUserByIdQuery(string Id) : IRequest<UserProfileResponse?>;
-    public record UserProfileResponse(string Id, string UserName, string? Bio, int FollowersCount, int FollowingCount);
+    public record UserProfileResponse(string Id, string UserName, string? Bio, string? email, int FollowersCount, int FollowingCount);
 
     public class GetUserProfileHandler : IRequestHandler<GetUserByIdQuery, UserProfileResponse?>
     {
@@ -21,6 +21,7 @@ namespace socmed.Mediator.Query
                     u.Id,
                     u.UserName!,
                     u.Bio,
+                    u.Email,
                     u.Followers.Count,
                     u.Following.Count))
                 .FirstOrDefaultAsync(cancellationToken);

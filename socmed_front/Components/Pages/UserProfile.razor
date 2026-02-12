@@ -1,0 +1,238 @@
+@page "/user/{UserId}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using socmed_front.Models
+@using socmed_front.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject UserService UserService
+@inject ProtectedLocalStorage LocalStorage
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="container mt-4">
+    @if (user == null)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mb-4">
+            <button class="btn btn-link p-0 text-decoration-none" @onclick="GoBackToUsers">
+                ? Назад в сообщество
+            </button>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="avatar-large bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 32px; font-weight: bold;">
+                                    @user.UserName[0].ToString().ToUpper()
+                                </div>
+                                <div>
+                                    <h2 class="mb-1">@user.UserName</h2>
+                                    <p class="text-muted mb-0">@user.Email</p>
+                                </div>
+                            </div>
+
+                            @if (isAuthenticated && !string.IsNullOrEmpty(currentUserId) && currentUserId != UserId)
+                            {
+                                @if (isFollowing)
+                                {
+                                    <button class="btn btn-danger" @onclick="ToggleFollow" disabled="@isToggling">
+                                        @if (isToggling)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        }
+                                        Отписаться
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-primary" @onclick="ToggleFollow" disabled="@isToggling">
+                                        @if (isToggling)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        }
+                                        Подписаться
+                                    </button>
+                                }
+                            }
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-6 text-center">
+                                <h4 class="mb-0 text-primary">@followers.Count</h4>
+                                <small class="text-muted">Подписчики</small>
+                            </div>
+                            <div class="col-6 text-center">
+                                <h4 class="mb-0 text-primary">@following.Count</h4>
+                                <small class="text-muted">Подписки</small>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-4">
+                            <h5 class="mb-3">О пользователе</h5>
+                            <p class="lead">
+                                @if (string.IsNullOrEmpty(user.Bio))
+                                {
+                                    <span class="text-muted fst-italic">Этот пользователь еще не заполнил описание профиля</span>
+                                }
+                                else
+                                {
+                                    @user.Bio
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (followers.Count > 0 || following.Count > 0)
+                {
+                    <div class="mt-4">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(activeTab == "followers" ? "active" : "")" 
+                                        @onclick="SelectFollowersTab" 
+                                        type="button" role="tab">
+                                    Подписчики (@followers.Count)
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(activeTab == "following" ? "active" : "")" 
+                                        @onclick="SelectFollowingTab" 
+                                        type="button" role="tab">
+                                    Подписки (@following.Count)
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content mt-3">
+                            @if (activeTab == "followers")
+                            {
+                                <div class="list-group">
+                                    @foreach (var follower in followers)
+                                    {
+                                        <a href="/user/@follower.Id" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h6 class="mb-1">@follower.UserName</h6>
+                                                    <small class="text-muted">@follower.Email</small>
+                                                </div>
+                                                <span class="badge bg-secondary">Подписчик</span>
+                                            </div>
+                                        </a>
+                                    }
+                                </div>
+                            }
+                            else if (activeTab == "following")
+                            {
+                                <div class="list-group">
+                                    @foreach (var followingUser in following)
+                                    {
+                                        <a href="/user/@followingUser.Id" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h6 class="mb-1">@followingUser.UserName</h6>
+                                                    <small class="text-muted">@followingUser.Email</small>
+                                                </div>
+                                                <span class="badge bg-info">Подписка</span>
+                                            </div>
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; } = string.Empty;
+
+    private UserDto? user;
+    private List<UserDto> followers = new();
+    private List<UserDto> following = new();
+    private string? currentUserId;
+    private bool isAuthenticated = false;
+    private bool isFollowing = false;
+    private bool isToggling = false;
+    private string activeTab = "followers";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                        ?? authState.User.FindFirst("sub")?.Value;
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        user = await UserService.GetUserProfile(UserId);
+        followers = await UserService.GetFollowers(UserId);
+        following = await UserService.GetFollowing(UserId);
+
+        if (isAuthenticated && !string.IsNullOrEmpty(currentUserId))
+        {
+            isFollowing = followers.Any(f => f.Id == currentUserId);
+        }
+    }
+
+    private void SelectTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    private void SelectFollowersTab()
+    {
+        activeTab = "followers";
+    }
+
+    private void SelectFollowingTab()
+    {
+        activeTab = "following";
+    }
+
+    private void GoBackToUsers()
+    {
+        Nav.NavigateTo("/users");
+    }
+
+    private async Task ToggleFollow()
+    {
+        var tokenResult = await LocalStorage.GetAsync<string>("accessToken");
+        if (!tokenResult.Success) return;
+
+        isToggling = true;
+
+        try
+        {
+            bool success;
+            if (isFollowing)
+                success = await UserService.UnfollowUser(UserId);
+            else
+                success = await UserService.FollowUser(UserId);
+
+            if (success)
+            {
+                await LoadData();
+            }
+        }
+        finally
+        {
+            isToggling = false;
+        }
+    }
+}

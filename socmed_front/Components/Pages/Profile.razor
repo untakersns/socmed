@@ -1,0 +1,283 @@
+@page "/profile/{UserId}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using socmed_front.Models
+@using socmed_front.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject UserService UserService
+@inject TokenProvider TokenProvider
+@inject ProtectedLocalStorage LocalStorage
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="container mt-4">
+    @if (user == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else
+    {
+        @if (!isMyProfile)
+        {
+            <div class="mb-3">
+                <button class="btn btn-link p-0 text-decoration-none" @onclick='() => Nav.NavigateTo($"/profile/{currentUserId}")'>
+                    ? В мой профиль
+                </button>
+            </div>
+        }
+
+        <div class="custom-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>@user.UserName</h2>
+
+                @if (isMyProfile)
+                {
+                    @if (!isEditing)
+                    {
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="StartEdit">Редактировать</button>
+                    }
+                }
+                else
+                {
+                    @if (isFollowing)
+                    {
+                        <button class="btn btn-danger" @onclick="ToggleFollow">Отписаться</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" @onclick="ToggleFollow">Подписаться</button>
+                    }
+                }
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-6 border-end text-center">
+                    <h4 class="mb-0">@followers.Count</h4>
+                    <small class="text-muted">Подписчики</small>
+                </div>
+                <div class="col-6 text-center">
+                    <h4 class="mb-0">@following.Count</h4>
+                    <small class="text-muted">Подписки</small>
+                </div>
+            </div>
+
+            @if (isEditing)
+            {
+                <div class="mb-3">
+                    <label>Имя пользователя</label>
+                    <input type="text" class="form-control mb-3" @bind="editingUser.UserName" />
+
+                    <label>О себе</label>
+                    <textarea class="form-control" @bind="editingUser.Bio" rows="4"></textarea>
+
+                    @if (!string.IsNullOrEmpty(updateErrorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@updateErrorMessage</div>
+                    }
+
+                    <div class="mt-3">
+                        <button class="btn btn-success btn-sm" @onclick="HandleUpdate" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Сохранение...</span>
+                            }
+                            else
+                            {
+                                <span>Сохранить</span>
+                            }
+                        </button>
+                        <button class="btn btn-light btn-sm" @onclick="() => CancelEdit()" disabled="@isSaving">Отмена</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p class="lead">@(user.Bio ?? "Пользователь еще ничего не рассказал о себе.")</p>
+                <p class="text-muted small">Email: @user.Email</p>
+            }
+        </div>
+
+        @if (followers.Count > 0 || following.Count > 0)
+        {
+            <div class="mt-4">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(activeTab == "followers" ? "active" : "")" 
+                                @onclick="SelectFollowersTab" 
+                                type="button" role="tab">
+                            Подписчики (@followers.Count)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(activeTab == "following" ? "active" : "")" 
+                                @onclick="SelectFollowingTab" 
+                                type="button" role="tab">
+                            Подписки (@following.Count)
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-3">
+                    @if (activeTab == "followers")
+                    {
+                        <div class="list-group">
+                            @foreach (var follower in followers)
+                            {
+                                <a href="/user/@follower.Id" class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">@follower.UserName</h6>
+                                            <small class="text-muted">@follower.Email</small>
+                                        </div>
+                                        <span class="badge bg-secondary">Подписчик</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else if (activeTab == "following")
+                    {
+                        <div class="list-group">
+                            @foreach (var followingUser in following)
+                            {
+                                <a href="/user/@followingUser.Id" class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">@followingUser.UserName</h6>
+                                            <small class="text-muted">@followingUser.Email</small>
+                                        </div>
+                                        <span class="badge bg-info">Подписка</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string UserId { get; set; } = string.Empty;
+
+    private UserDto? user;
+    private UpdateUserProfileRequest editingUser = new();
+    private List<UserDto> followers = new();
+    private List<UserDto> following = new();
+
+    private string? currentUserId;
+    private bool isMyProfile => UserId == currentUserId;
+    private bool isEditing = false;
+    private bool isFollowing = false;
+    private bool isSaving = false;
+    private string? updateErrorMessage;
+    private string activeTab = "followers";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                        ?? authState.User.FindFirst("sub")?.Value;
+
+        // Сбрасываем состояние при смене профиля
+        isEditing = false;
+        activeTab = "followers";
+        updateErrorMessage = null;
+        
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        user = await UserService.GetUserProfile(UserId);
+        followers = await UserService.GetFollowers(UserId);
+        following = await UserService.GetFollowing(UserId);
+
+        if (!string.IsNullOrEmpty(currentUserId) && !isMyProfile)
+        {
+            isFollowing = followers.Any(f => f.Id == currentUserId);
+        }
+    }
+
+    private async Task ToggleFollow()
+    {
+        var tokenResult = await LocalStorage.GetAsync<string>("accessToken");
+        if (!tokenResult.Success) return;
+
+        bool success;
+        if (isFollowing)
+            success = await UserService.UnfollowUser(UserId);
+        else
+            success = await UserService.FollowUser(UserId);
+
+        if (success)
+        {
+            await LoadData();
+        }
+    }
+
+    private void StartEdit()
+    {
+        if (user == null) return;
+
+        editingUser = new UpdateUserProfileRequest
+        {
+            UserName = user.UserName,
+            Bio = user.Bio
+        };
+        isEditing = true;
+        updateErrorMessage = null;
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        updateErrorMessage = null;
+    }
+
+    private void SelectFollowersTab()
+    {
+        activeTab = "followers";
+    }
+
+    private void SelectFollowingTab()
+    {
+        activeTab = "following";
+    }
+
+    private async Task HandleUpdate()
+    {
+        if (user == null || string.IsNullOrWhiteSpace(editingUser.UserName))
+        {
+            updateErrorMessage = "Имя пользователя не может быть пустым";
+            return;
+        }
+
+        isSaving = true;
+        updateErrorMessage = null;
+
+        try
+        {
+            var success = await UserService.UpdateUserProfile(UserId, editingUser);
+
+            if (success)
+            {
+                await LoadData();
+                isEditing = false;
+            }
+            else
+            {
+                updateErrorMessage = "Ошибка при сохранении профиля. Попробуйте еще раз.";
+            }
+        }
+        catch (Exception ex)
+        {
+            updateErrorMessage = $"Ошибка: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

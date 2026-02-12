@@ -23,7 +23,16 @@ builder.Services.AddDbContext<SMDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<SMDbContext>()
     .AddDefaultTokenProviders();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazor", policy =>
+    {
+        policy.WithOrigins("https://localhost:7145", "https://localhost:7047") 
+              .AllowAnyMethod()
+              .AllowAnyHeader() 
+              .AllowCredentials();
+    });
+});
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddHttpContextAccessor();
@@ -55,8 +64,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
+app.UseRouting();
 app.UseHttpsRedirection();
+app.UseCors("AllowBlazor");
 app.UseAuthentication();
 app.UseAuthorization();
 

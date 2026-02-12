@@ -1,9 +1,67 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components.Authorization
+@using socmed_front.Components.Shared
+@using socmed_front.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject TokenProvider TokenProvider
+@inject ProtectedLocalStorage LocalStorage
+@inject socmed_front.Services.AuthService AuthService
+@inject CustomAuthStateProvider CustomAuthProvider
 
-@Body
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <main>
+        <div class="top-row px-4 border-bottom bg-white d-flex justify-content-between align-items-center">
+            <span class="navbar-brand"><strong>SocMed</strong> App</span>
+            
+            <AuthorizeView>
+                <Authorized>
+                    <span class="me-3">Привет, @context.User.Identity?.Name!</span>
+                    <button class="btn btn-outline-danger btn-sm ms-3" @onclick="HandleLogout">
+                        <i class="bi bi-box-arrow-right"></i> Выйти
+                    </button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login" class="btn btn-sm btn-outline-primary">Войти</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
 </div>
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !TokenProvider.IsInitialized)
+        {
+            try
+            {
+                var result = await LocalStorage.GetAsync<string>("accessToken");
+                if (result.Success && !string.IsNullOrEmpty(result.Value))
+                {
+                    TokenProvider.Token = result.Value;
+                    CustomAuthProvider.NotifyUserAuthentication(result.Value);
+                }
+                else
+                {
+                    CustomAuthProvider.NotifyUserLogout();
+                }
+                TokenProvider.IsInitialized = true;
+                StateHasChanged();
+            }
+            catch
+            {
+                TokenProvider.IsInitialized = true;
+            }
+        }
+    }
+    
+    private async Task HandleLogout() => await AuthService.Logout();
+}

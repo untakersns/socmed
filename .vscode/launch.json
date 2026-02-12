@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        
+        {
+            "name": "C#: socmed_front [https]",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}\\socmed_front\\socmed_front.csproj",
+            "launchConfigurationId": "TargetFramework=;https"
+        }
+    ]
+}

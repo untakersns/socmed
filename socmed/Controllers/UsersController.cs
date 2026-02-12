@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using socmed.Dto;
 using socmed.Mediator.Handler;
 using socmed.Mediator.Query;
 using System.Security.Claims;
@@ -15,16 +17,33 @@ namespace socmed.Controllers
 
         public UsersController(IMediator mediator) => _mediator = mediator;
 
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<UserDto>>> GetAllUsers()
+        {
+            return await _mediator.Send(new GetAllUsersQuery());
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfile(string id) => Ok(await _mediator.Send(new GetUserByIdQuery(id)));
+        [HttpGet("followers/{id}")]
+        public async Task<ActionResult<List<UserDtoFol>>> GetFollowers(string id)
+        {
+            return Ok(await _mediator.Send(new GetFollowersQuery(id)));
+        }
 
-        [HttpGet("{id}/followers")]
-        [HttpGet("{id}/following")]
+        [HttpGet("following/{id}")]
+        public async Task<ActionResult<List<UserDtoFol>>> GetFollowing(string id)
+        {
+            return Ok(await _mediator.Send(new GetFollowingQuery(id)));
+        }
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProfile(string id, [FromBody] UpdateUserProfileRequest request)
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            Console.WriteLine($"DEBUG: Attempting to update ID {id}. Token ID is {userId}");
             if (id != currentUserId) return Forbid();
             var command = new UpdateUserProfileCommand(
                 id,
@@ -37,7 +56,7 @@ namespace socmed.Controllers
         }
 
         [Authorize]
-        [HttpPost("/follow/{targetId}")]
+        [HttpPost("follow/{targetId}")]
         public async Task<IActionResult> Follow(string targetId)
         {
             var result = await _mediator.Send(new FollowUserCommand(targetId));
@@ -45,23 +64,11 @@ namespace socmed.Controllers
         }
 
         [Authorize]
-        [HttpDelete("/unfollow/{targetId}")]
+        [HttpDelete("unfollow/{targetId}")]
         public async Task<IActionResult> Unfollow(string targetId)
         {
             var result = await _mediator.Send(new UnfollowUserCommand(targetId));
             return result ? Ok() : BadRequest("Вы не подписаны на этого пользователя");
-        }
-
-        [HttpGet("/followers/{id}")]
-        public async Task<ActionResult<List<UserDto>>> GetFollowers(string id)
-        {
-            return Ok(await _mediator.Send(new GetFollowersQuery(id)));
-        }
-
-        [HttpGet("/following/{id}")]
-        public async Task<ActionResult<List<UserDto>>> GetFollowing(string id)
-        {
-            return Ok(await _mediator.Send(new GetFollowingQuery(id)));
         }
     }
 }
