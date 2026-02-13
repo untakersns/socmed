@@ -4,7 +4,7 @@
 @using socmed_front.Services
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @inject UserService UserService
-@inject TokenProvider TokenProvider
+@inject ITokenService TokenService
 @inject ProtectedLocalStorage LocalStorage
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthStateProvider
@@ -12,7 +12,7 @@
 <div class="container mt-4">
     @if (user == null)
     {
-        <p>Загрузка...</p>
+        <p>Р—Р°РіСЂСѓР·РєР°...</p>
     }
     else
     {
@@ -20,7 +20,7 @@
         {
             <div class="mb-3">
                 <button class="btn btn-link p-0 text-decoration-none" @onclick='() => Nav.NavigateTo($"/profile/{currentUserId}")'>
-                    ? В мой профиль
+                    ? РџРµСЂРµР№С‚Рё Рє РјРѕРµРјСѓ РїСЂРѕС„РёР»СЋ
                 </button>
             </div>
         }
@@ -33,18 +33,18 @@
                 {
                     @if (!isEditing)
                     {
-                        <button class="btn btn-sm btn-outline-secondary" @onclick="StartEdit">Редактировать</button>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="StartEdit">Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ</button>
                     }
                 }
                 else
                 {
                     @if (isFollowing)
                     {
-                        <button class="btn btn-danger" @onclick="ToggleFollow">Отписаться</button>
+                        <button class="btn btn-danger" @onclick="ToggleFollow">РћС‚РїРёСЃР°С‚СЊСЃСЏ</button>
                     }
                     else
                     {
-                        <button class="btn btn-primary" @onclick="ToggleFollow">Подписаться</button>
+                        <button class="btn btn-primary" @onclick="ToggleFollow">РџРѕРґРїРёСЃР°С‚СЊСЃСЏ</button>
                     }
                 }
             </div>
@@ -52,21 +52,21 @@
             <div class="row mb-4">
                 <div class="col-6 border-end text-center">
                     <h4 class="mb-0">@followers.Count</h4>
-                    <small class="text-muted">Подписчики</small>
+                    <small class="text-muted">РџРѕРґРїРёСЃС‡РёРєРё</small>
                 </div>
                 <div class="col-6 text-center">
                     <h4 class="mb-0">@following.Count</h4>
-                    <small class="text-muted">Подписки</small>
+                    <small class="text-muted">РџРѕРґРїРёСЃРєРё</small>
                 </div>
             </div>
 
             @if (isEditing)
             {
                 <div class="mb-3">
-                    <label>Имя пользователя</label>
+                    <label>РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ</label>
                     <input type="text" class="form-control mb-3" @bind="editingUser.UserName" />
 
-                    <label>О себе</label>
+                    <label>Рћ СЃРµР±Рµ</label>
                     <textarea class="form-control" @bind="editingUser.Bio" rows="4"></textarea>
 
                     @if (!string.IsNullOrEmpty(updateErrorMessage))
@@ -79,20 +79,20 @@
                             @if (isSaving)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Сохранение...</span>
+                                <span>РЎРѕС…СЂР°РЅРµРЅРёРµ...</span>
                             }
                             else
                             {
-                                <span>Сохранить</span>
+                                <span>РЎРѕС…СЂР°РЅРёС‚СЊ</span>
                             }
                         </button>
-                        <button class="btn btn-light btn-sm" @onclick="() => CancelEdit()" disabled="@isSaving">Отмена</button>
+                        <button class="btn btn-light btn-sm" @onclick="() => CancelEdit()" disabled="@isSaving">РћС‚РјРµРЅР°</button>
                     </div>
                 </div>
             }
             else
             {
-                <p class="lead">@(user.Bio ?? "Пользователь еще ничего не рассказал о себе.")</p>
+                <p class="lead">@(user.Bio ?? "РРЅС„РѕСЂРјР°С†РёСЏ Рѕ СЃРµР±Рµ РЅРµ Р·Р°РїРѕР»РЅРµРЅР° РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј.")</p>
                 <p class="text-muted small">Email: @user.Email</p>
             }
         </div>
@@ -102,17 +102,17 @@
             <div class="mt-4">
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link @(activeTab == "followers" ? "active" : "")" 
-                                @onclick="SelectFollowersTab" 
+                        <button class="nav-link @(activeTab == "followers" ? "active" : "")"
+                                @onclick="SelectFollowersTab"
                                 type="button" role="tab">
-                            Подписчики (@followers.Count)
+                            РџРѕРґРїРёСЃС‡РёРєРё (@followers.Count)
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link @(activeTab == "following" ? "active" : "")" 
-                                @onclick="SelectFollowingTab" 
+                        <button class="nav-link @(activeTab == "following" ? "active" : "")"
+                                @onclick="SelectFollowingTab"
                                 type="button" role="tab">
-                            Подписки (@following.Count)
+                            РџРѕРґРїРёСЃРєРё (@following.Count)
                         </button>
                     </li>
                 </ul>
@@ -129,7 +129,7 @@
                                             <h6 class="mb-1">@follower.UserName</h6>
                                             <small class="text-muted">@follower.Email</small>
                                         </div>
-                                        <span class="badge bg-secondary">Подписчик</span>
+                                        <span class="badge bg-secondary">РџРѕРґРїРёСЃС‡РёРє</span>
                                     </div>
                                 </a>
                             }
@@ -146,7 +146,7 @@
                                             <h6 class="mb-1">@followingUser.UserName</h6>
                                             <small class="text-muted">@followingUser.Email</small>
                                         </div>
-                                        <span class="badge bg-info">Подписка</span>
+                                        <span class="badge bg-info">РџРѕРґРїРёСЃРєР°</span>
                                     </div>
                                 </a>
                             }
@@ -176,16 +176,34 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                        ?? authState.User.FindFirst("sub")?.Value;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                            ?? authState.User.FindFirst("sub")?.Value;
 
-        // Сбрасываем состояние при смене профиля
-        isEditing = false;
-        activeTab = "followers";
-        updateErrorMessage = null;
-        
-        await LoadData();
+            // РЎР±СЂРѕСЃ СЃРѕСЃС‚РѕСЏРЅРёСЏ РґР»СЏ РЅРѕРІРѕРіРѕ РїСЂРѕС„РёР»СЏ
+            isEditing = false;
+            activeTab = "followers";
+            updateErrorMessage = null;
+
+            await LoadData();
+        }
+        catch (InvalidOperationException)
+        {
+            // During static rendering, skip loading data
+            user = null;
+        }
+        catch (JSException)
+        {
+            // During static rendering, skip loading data
+            user = null;
+        }
+        catch
+        {
+            // For any other error, set user to null
+            user = null;
+        }
     }
 
     private async Task LoadData()
@@ -202,18 +220,33 @@
 
     private async Task ToggleFollow()
     {
-        var tokenResult = await LocalStorage.GetAsync<string>("accessToken");
-        if (!tokenResult.Success) return;
-
-        bool success;
-        if (isFollowing)
-            success = await UserService.UnfollowUser(UserId);
-        else
-            success = await UserService.FollowUser(UserId);
-
-        if (success)
+        try
         {
-            await LoadData();
+            var tokenResult = await LocalStorage.GetAsync<string>("accessToken");
+            if (!tokenResult.Success) return;
+
+            bool success;
+            if (isFollowing)
+                success = await UserService.UnfollowUser(UserId);
+            else
+                success = await UserService.FollowUser(UserId);
+
+            if (success)
+            {
+                await LoadData();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+           
+        }
+        catch (JSException)
+        {
+           
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"РћС€РёР±РєР° РїСЂРё РїРѕРїС‹С‚РєРµ РїРѕРґРїРёСЃРєРё/РѕС‚РїРёСЃРєРё: {ex.Message}");
         }
     }
 
@@ -250,7 +283,7 @@
     {
         if (user == null || string.IsNullOrWhiteSpace(editingUser.UserName))
         {
-            updateErrorMessage = "Имя пользователя не может быть пустым";
+            updateErrorMessage = "РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј";
             return;
         }
 
@@ -268,12 +301,12 @@
             }
             else
             {
-                updateErrorMessage = "Ошибка при сохранении профиля. Попробуйте еще раз.";
+                updateErrorMessage = "РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё РїСЂРѕС„РёР»СЏ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·.";
             }
         }
         catch (Exception ex)
         {
-            updateErrorMessage = $"Ошибка: {ex.Message}";
+            updateErrorMessage = $"РћС€РёР±РєР°: {ex.Message}";
         }
         finally
         {

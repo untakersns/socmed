@@ -100,10 +100,31 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
-        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                        ?? authState.User.FindFirst("sub")?.Value;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+            currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                            ?? authState.User.FindFirst("sub")?.Value;
+        }
+        catch (InvalidOperationException)
+        {
+            // During static rendering, set defaults
+            isAuthenticated = false;
+            currentUserId = null;
+        }
+        catch (JSException)
+        {
+            // During static rendering, set defaults
+            isAuthenticated = false;
+            currentUserId = null;
+        }
+        catch
+        {
+            // For any other error, set defaults
+            isAuthenticated = false;
+            currentUserId = null;
+        }
 
         await LoadUsers();
     }
@@ -144,13 +165,13 @@
 
     private async Task ToggleFollow(string userId)
     {
-        var tokenResult = await LocalStorage.GetAsync<string>("accessToken");
-        if (!tokenResult.Success) return;
-
-        togglingUserId = userId;
-
         try
         {
+            var tokenResult = await LocalStorage.GetAsync<string>("accessToken");
+            if (!tokenResult.Success) return;
+
+            togglingUserId = userId;
+
             bool success;
             if (GetFollowingStatus(userId))
             {
@@ -168,6 +189,20 @@
                     userFollowingStatus[userId] = true;
                 }
             }
+        }
+        catch (InvalidOperationException)
+        {
+            // During static rendering, skip the operation
+            Console.WriteLine("Доступ к localStorage невозможен (статический рендеринг)");
+        }
+        catch (JSException)
+        {
+            // During static rendering, skip the operation
+            Console.WriteLine("Доступ к localStorage невозможно (статический рендеринг)");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при попытке подписки/отписки: {ex.Message}");
         }
         finally
         {

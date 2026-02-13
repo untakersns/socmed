@@ -18,6 +18,13 @@
         public string AccessToken { get; set; }= string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
     }
+    
     public record AuthResponse(string AccessToken, string RefreshToken);
     public record RefreshTokenRequest(string AccessToken, string RefreshToken);
+    
+    public class RefreshRequest
+    {
+        public string AccessToken { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
+    }
 }

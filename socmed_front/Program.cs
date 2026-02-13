@@ -10,14 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<ProtectedLocalStorage>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
-builder.Services.AddScoped<JwtInterceptor>(sp =>
+builder.Services.AddScoped(sp =>
 {
     var localStorage = sp.GetRequiredService<ProtectedLocalStorage>();
-    var tokenProvider = sp.GetRequiredService<TokenProvider>();
-    return new JwtInterceptor(localStorage, tokenProvider);
+    var tokenService = sp.GetRequiredService<ITokenService>();
+    return new JwtInterceptor(localStorage, tokenService);
 });
 
 builder.Services.AddHttpClient("MyAPI", client =>
@@ -29,17 +29,19 @@ builder.Services.AddHttpClient("MyAPI", client =>
 builder.Services.AddScoped<UserService>(sp => {
     var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var client = clientFactory.CreateClient("MyAPI");
-    return new UserService(client);
+    var tokenService = sp.GetRequiredService<ITokenService>();
+    var authService = sp.GetRequiredService<AuthService>();
+    return new UserService(client, tokenService, authService);
 });
 
 builder.Services.AddScoped<AuthService>(sp => {
     var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var client = clientFactory.CreateClient("MyAPI");
     var localStorage = sp.GetRequiredService<ProtectedLocalStorage>();
-    var tokenProvider = sp.GetRequiredService<TokenProvider>();
+    var tokenService = sp.GetRequiredService<ITokenService>();
     var authStateProvider = sp.GetRequiredService<CustomAuthStateProvider>();
     var navManager = sp.GetRequiredService<NavigationManager>();
-    return new AuthService(client, localStorage, tokenProvider, authStateProvider, navManager);
+    return new AuthService(client, localStorage, tokenService, authStateProvider, navManager);
 });
 
 builder.Services.AddScoped<ProtectedSessionStorage>();

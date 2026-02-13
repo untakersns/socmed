@@ -4,7 +4,7 @@
 @using socmed_front.Components.Shared
 @using socmed_front.Services
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@inject TokenProvider TokenProvider
+@inject ITokenService TokenService
 @inject ProtectedLocalStorage LocalStorage
 @inject socmed_front.Services.AuthService AuthService
 @inject CustomAuthStateProvider CustomAuthProvider
@@ -17,7 +17,7 @@
     <main>
         <div class="top-row px-4 border-bottom bg-white d-flex justify-content-between align-items-center">
             <span class="navbar-brand"><strong>SocMed</strong> App</span>
-            
+
             <AuthorizeView>
                 <Authorized>
                     <span class="me-3">Привет, @context.User.Identity?.Name!</span>
@@ -39,29 +39,13 @@
 @code {
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !TokenProvider.IsInitialized)
+        if (firstRender)
         {
-            try
-            {
-                var result = await LocalStorage.GetAsync<string>("accessToken");
-                if (result.Success && !string.IsNullOrEmpty(result.Value))
-                {
-                    TokenProvider.Token = result.Value;
-                    CustomAuthProvider.NotifyUserAuthentication(result.Value);
-                }
-                else
-                {
-                    CustomAuthProvider.NotifyUserLogout();
-                }
-                TokenProvider.IsInitialized = true;
-                StateHasChanged();
-            }
-            catch
-            {
-                TokenProvider.IsInitialized = true;
-            }
+            // The authentication state is handled by CustomAuthStateProvider via cascading authentication state
+            // No need to manually initialize here since the auth state provider handles token retrieval
+            StateHasChanged();
         }
     }
-    
+
     private async Task HandleLogout() => await AuthService.Logout();
 }

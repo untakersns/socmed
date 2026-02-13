@@ -22,13 +22,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? authState.User.FindFirst("sub")?.Value;
-        
-        if (!string.IsNullOrEmpty(userId))
+        try
         {
-            profileLink = $"profile/{userId}";
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                         ?? authState.User.FindFirst("sub")?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                profileLink = $"profile/{userId}";
+            }
+        }
+        catch
+        {
+            profileLink = string.Empty;
         }
     }
 

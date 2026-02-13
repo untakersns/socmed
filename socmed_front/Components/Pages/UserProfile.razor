@@ -13,7 +13,7 @@
     {
         <div class="d-flex justify-content-center my-5">
             <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Загрузка...</span>
+                <span class="visually-hidden">Р—Р°РіСЂСѓР·РєР°...</span>
             </div>
         </div>
     }
@@ -21,7 +21,7 @@
     {
         <div class="mb-4">
             <button class="btn btn-link p-0 text-decoration-none" @onclick="GoBackToUsers">
-                ? Назад в сообщество
+                в†ђ РќР°Р·Р°Рґ Рє СЃРѕРѕР±С‰РµСЃС‚РІСѓ
             </button>
         </div>
 
@@ -49,7 +49,7 @@
                                         {
                                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                         }
-                                        Отписаться
+                                        РћС‚РїРёСЃР°С‚СЊСЃСЏ
                                     </button>
                                 }
                                 else
@@ -59,7 +59,7 @@
                                         {
                                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                         }
-                                        Подписаться
+                                        РџРѕРґРїРёСЃР°С‚СЊСЃСЏ
                                     </button>
                                 }
                             }
@@ -68,20 +68,20 @@
                         <div class="row mb-4">
                             <div class="col-6 text-center">
                                 <h4 class="mb-0 text-primary">@followers.Count</h4>
-                                <small class="text-muted">Подписчики</small>
+                                <small class="text-muted">РџРѕРґРїРёСЃС‡РёРєРё</small>
                             </div>
                             <div class="col-6 text-center">
                                 <h4 class="mb-0 text-primary">@following.Count</h4>
-                                <small class="text-muted">Подписки</small>
+                                <small class="text-muted">РџРѕРґРїРёСЃРєРё</small>
                             </div>
                         </div>
 
                         <div class="border-top pt-4">
-                            <h5 class="mb-3">О пользователе</h5>
+                            <h5 class="mb-3">Рћ РїРѕР»СЊР·РѕРІР°С‚РµР»Рµ</h5>
                             <p class="lead">
                                 @if (string.IsNullOrEmpty(user.Bio))
                                 {
-                                    <span class="text-muted fst-italic">Этот пользователь еще не заполнил описание профиля</span>
+                                    <span class="text-muted fst-italic">РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РґРѕР±Р°РІРёР» РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ СЃРµР±Рµ</span>
                                 }
                                 else
                                 {
@@ -97,17 +97,17 @@
                     <div class="mt-4">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link @(activeTab == "followers" ? "active" : "")" 
-                                        @onclick="SelectFollowersTab" 
+                                <button class="nav-link @(activeTab == "followers" ? "active" : "")"
+                                        @onclick="SelectFollowersTab"
                                         type="button" role="tab">
-                                    Подписчики (@followers.Count)
+                                    РџРѕРґРїРёСЃС‡РёРєРё (@followers.Count)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link @(activeTab == "following" ? "active" : "")" 
-                                        @onclick="SelectFollowingTab" 
+                                <button class="nav-link @(activeTab == "following" ? "active" : "")"
+                                        @onclick="SelectFollowingTab"
                                         type="button" role="tab">
-                                    Подписки (@following.Count)
+                                    РџРѕРґРїРёСЃРєРё (@following.Count)
                                 </button>
                             </li>
                         </ul>
@@ -124,7 +124,7 @@
                                                     <h6 class="mb-1">@follower.UserName</h6>
                                                     <small class="text-muted">@follower.Email</small>
                                                 </div>
-                                                <span class="badge bg-secondary">Подписчик</span>
+                                                <span class="badge bg-secondary">РџРѕРґРїРёСЃС‡РёРє</span>
                                             </div>
                                         </a>
                                     }
@@ -141,7 +141,7 @@
                                                     <h6 class="mb-1">@followingUser.UserName</h6>
                                                     <small class="text-muted">@followingUser.Email</small>
                                                 </div>
-                                                <span class="badge bg-info">Подписка</span>
+                                                <span class="badge bg-info">РџРѕРґРїРёСЃРєР°</span>
                                             </div>
                                         </a>
                                     }
